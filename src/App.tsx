@@ -723,38 +723,8 @@ export default function App() {
       setLoading(false);
       
     } catch (err: any) {
-      // Robust Fallback Mechanism for Play Store Review & Demo
-      setTimeout(() => {
-        if (targetRoll.length < 5) {
-          setError("Invalid Roll Number. Please check and try again.");
-          setLoading(false);
-          return;
-        }
-
-        const mockResult: ResultData = {
-          roll_no: targetRoll,
-          name: "MILAN SARAN",
-          father_name: "RAVINDRA SARAN",
-          mother_name: "DR. INDU",
-          school_name: "ZORAN ACADEMY OF EXCELLENCE",
-          class_type: classToFetch || selectedClass,
-          result_status: "PASS",
-          percentage: 95.6,
-          total_marks: 574,
-          subject_wise_marks: [
-            { subject: "HINDI", theory_marks: 95, practical_marks: 0, total_marks: 95, grade: "A+" },
-            { subject: "ENGLISH", theory_marks: 92, practical_marks: 0, total_marks: 92, grade: "A+" },
-            { subject: "SCIENCE", theory_marks: 75, practical_marks: 20, total_marks: 95, grade: "A+" },
-            { subject: "MATHS", theory_marks: 100, practical_marks: 0, total_marks: 100, grade: "A+" },
-            { subject: "SOCIAL SCIENCE", theory_marks: 98, practical_marks: 0, total_marks: 98, grade: "A+" },
-            { subject: "SANSKRIT", theory_marks: 94, practical_marks: 0, total_marks: 94, grade: "A+" }
-          ]
-        };
-        setResult(mockResult);
-        saveToHistory(mockResult);
-        triggerConfetti();
-        setLoading(false);
-      }, 1500);
+      setError(err.message || "An unexpected error occurred.");
+      setLoading(false);
     }
   };
 
@@ -775,21 +745,8 @@ export default function App() {
       const data = await response.json();
       setSchoolResult(data.students);
     } catch (err: any) {
-      setTimeout(() => {
-        if (schoolCode.length < 4) {
-          setError("Invalid School Code. Please check and try again.");
-          setLoading(false);
-          return;
-        }
-
-        const mockStudents: ResultData[] = [
-          { roll_no: "100001", name: "MILAN SARAN", father_name: "RAVINDRA", mother_name: "INDU", school_name: "ZORAN ACADEMY", class_type: selectedClass, result_status: "PASS", percentage: 95.6, total_marks: 574, subject_wise_marks: [] },
-          { roll_no: "100002", name: "AMIT KUMAR", father_name: "FATHER", mother_name: "MOTHER", school_name: "ZORAN ACADEMY", class_type: selectedClass, result_status: "PASS", percentage: 92.0, total_marks: 552, subject_wise_marks: [] },
-          { roll_no: "100003", name: "PRIYA SHARMA", father_name: "FATHER", mother_name: "MOTHER", school_name: "ZORAN ACADEMY", class_type: selectedClass, result_status: "FAIL", percentage: 32.0, total_marks: 192, subject_wise_marks: [] },
-        ];
-        setSchoolResult(mockStudents);
-        setLoading(false);
-      }, 1500);
+      setError(err.message || "An unexpected error occurred.");
+      setLoading(false);
     }
   };
 

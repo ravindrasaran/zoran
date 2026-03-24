@@ -45,8 +45,60 @@ async function startServer() {
   // API Route to fetch RBSE results
   app.get("/api/result/:rollNumber", async (req, res) => {
     const { rollNumber } = req.params;
+    const classType = req.query.class as string;
     
     try {
+      if (classType === '5th' || classType === '8th') {
+        const SHALA_DARPAN_URL = "https://rajshaladarpan.rajasthan.gov.in/Class5th_8thExam/Home/SuppResultClassVth_VIIIth.aspx";
+        
+        // Attempt to fetch the page to get ViewState (ASPX requirement)
+        const getResponse = await axios.get(SHALA_DARPAN_URL, { 
+          timeout: 15000,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        
+        const $ = cheerio.load(getResponse.data);
+        const viewState = $("#__VIEWSTATE").val();
+        const eventValidation = $("#__EVENTVALIDATION").val();
+        const viewStateGenerator = $("#__VIEWSTATEGENERATOR").val();
+
+        const params = new URLSearchParams();
+        params.append('__VIEWSTATE', viewState as string || '');
+        params.append('__EVENTVALIDATION', eventValidation as string || '');
+        params.append('__VIEWSTATEGENERATOR', viewStateGenerator as string || '');
+        params.append('txtRollNo', rollNumber); // Assuming standard ASPX input names
+        params.append('ddlClass', classType === '5th' ? '5' : '8'); 
+        params.append('btnSearch', 'Submit'); 
+
+        const postResponse = await axios.post(SHALA_DARPAN_URL, params.toString(), {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+          },
+          timeout: 15000 
+        });
+
+        const html = postResponse.data;
+        const $$ = cheerio.load(html);
+
+        if (html.includes("Not Found") || html.includes("Invalid Roll Number") || html.includes("No Record Found")) {
+          return res.status(404).json({ error: "Roll Number Not Found" });
+        }
+
+        // Generic parsing logic (will need adjustment based on actual HTML structure)
+        const name = $$("body").text().match(/Name\s*:\s*([^\n\r]+)/i)?.[1]?.trim() || "Unknown Student";
+        const resultStatus = html.includes("FAIL") ? "FAIL" : "PASS";
+
+        return res.json({
+          name,
+          roll_no: rollNumber,
+          subject_wise_marks: [],
+          total_marks: 0,
+          result_status: resultStatus
+        });
+      }
+
+      // Existing logic for 10th and 12th
       const RBSE_URL = "http://rajresults.nic.in/resbserx19.htm"; 
       
       const params = new URLSearchParams();
@@ -103,8 +155,8 @@ async function startServer() {
 
     } catch (error: any) {
       console.error("Scraping error:", error);
-      if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') {
-        res.status(503).json({ error: "The official RBSE result server is currently unreachable. Please try again later." });
+      if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN' || error.code === 'ECONNABORTED') {
+        res.status(503).json({ error: "The official result server is currently unreachable or timing out. Please try again later." });
       } else {
         res.status(500).json({ error: "Official server is busy, please try again in a few minutes." });
       }
