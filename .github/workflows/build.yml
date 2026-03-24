@@ -1,0 +1,58 @@
+name: Sabadwani App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build React App
+        run: npm run build
+
+      - name: Capacitor Sync
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Build APK & AAB
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          ./gradlew bundleRelease
+
+      - name: Rename Files
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/Sabadwani.apk
+          mv android/app/build/outputs/bundle/release/app-release.aab android/app/build/outputs/bundle/release/Sabadwani.aab
+
+      - name: Upload APK (For Testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sabadwani-APK
+          path: android/app/build/outputs/apk/debug/Sabadwani.apk
+
+      - name: Upload AAB (For Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sabadwani-AAB
+          path: android/app/build/outputs/bundle/release/Sabadwani.aab

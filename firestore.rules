@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "shreshthacollege@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    match /pre_registrations/{document} {
+      // Allow public write for registration, and admin read/update/delete
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /notices/{document} {
+      // Allow public read for users, and admin write
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{document} {
+      // Allow public read for settings (like ads), and admin write
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /feedback/{document} {
+      // Allow public write for feedback, and admin read/update/delete
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
