@@ -1,4 +1,4 @@
-name: Sabadwani App
+name: Zoran App
 
 on:
   workflow_dispatch:
@@ -42,17 +42,17 @@ jobs:
 
       - name: Rename Files
         run: |
-          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/Sabadwani.apk
-          mv android/app/build/outputs/bundle/release/app-release.aab android/app/build/outputs/bundle/release/Sabadwani.aab
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/Zoran.apk
+          mv android/app/build/outputs/bundle/release/app-release.aab android/app/build/outputs/bundle/release/Zoran.aab
 
       - name: Upload APK (For Testing)
         uses: actions/upload-artifact@v4
         with:
-          name: Sabadwani-APK
-          path: android/app/build/outputs/apk/debug/Sabadwani.apk
+          name: Zoran-APK
+          path: android/app/build/outputs/apk/debug/Zoran.apk
 
       - name: Upload AAB (For Play Store)
         uses: actions/upload-artifact@v4
         with:
-          name: Sabadwani-AAB
-          path: android/app/build/outputs/bundle/release/Sabadwani.aab
+          name: Zoran-AAB
+          path: android/app/build/outputs/bundle/release/Zoran.aab
